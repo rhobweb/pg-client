@@ -12,7 +12,7 @@
     "chai": "^4.3.0",
     "nyc": "^15.1.0",
     "rewire": "^6.0.0",
-    "sinon": "^14.0.0"
+    "sinon": "^15.0.1"
   },
   "license": "ISC",
   "main": "pg-client.js",
