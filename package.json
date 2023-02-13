@@ -10,6 +10,7 @@
     "@babel/plugin-syntax-class-properties": "^7.12.13",
     "@rhobweb.js/verdaccio-readme-fixer": "^1.0.0",
     "chai": "^4.3.0",
+    "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "rewire": "^6.0.0",
     "sinon": "^15.0.1"
