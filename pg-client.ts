@@ -7,12 +7,36 @@
  *                           - rollback;
  *                           - commit.
  */
-'use strict';
 
-const pg             = require( 'pg' ) ;
-const DEFAULT_HOST   = '0.0.0.0' ; // Default DB host if not specified in the environment
-const DEFAULT_PORT   = '5432' ;    // Default DB port if not specified in the environment
-const TERMINATE_POOL = true ;
+import pg from 'pg';
+
+const DEFAULT_HOST   = '0.0.0.0'; // Default DB host if not specified in the environment
+const DEFAULT_PORT   = '5432';    // Default DB port if not specified in the environment
+const TERMINATE_POOL = true;
+
+type TypeDbEnvVarDef          = { prop:string, default?: string, sensitive?: boolean };
+type TypeDbEnvVarConfig       = { [key:string] : TypeDbEnvVarDef };
+
+type TypeEnvVarConfig       = { [key:string] : string };
+type TypeEnvVarStoredConfig = { [key:string] : string | undefined };
+
+type TypeAdditionPoolClient = {
+  begin:    () => Promise<void>,
+  commit:   () => Promise<void>,
+  rollback: () => Promise<void>,
+};
+type TypePoolClient = pg.PoolClient & TypeAdditionPoolClient;
+
+type TypePool = {
+  connect : () => Promise<TypePoolClient>,
+  end :     () => Promise<void>,
+};
+
+type TypeNullablePool = TypePool | null;
+
+type TypeCustomPool = {
+  close : () => Promise<TypeNullablePool>,
+};
 
 /**
  * The mandatory environment variables for this module.
@@ -21,7 +45,7 @@ const TERMINATE_POOL = true ;
  *  - prop:    the property name required for the pg module pool creation;
  *  - default: optional default value to use if the environment variable is not defined.
  */
-const MANDATORY_ENV_VARS = {
+const MANDATORY_ENV_VARS : TypeDbEnvVarConfig = {
   'PGHOST':     { prop: 'host',     default: DEFAULT_HOST },
   'PGPORT':     { prop: 'port',     default: DEFAULT_PORT },
   'PGDATABASE': { prop: 'database',                       },
@@ -35,7 +59,7 @@ const MANDATORY_ENV_VARS = {
  * Values are an object with properties:
  *  - prop: the property name required for the pg module pool creation;
  */
- const OPTIONAL_ENV_VARS = { 
+ const OPTIONAL_ENV_VARS : TypeDbEnvVarConfig = { 
   'PG_MAX_CLIENT':      { prop: 'max' ,                    }, // pg default is 10
   'PG_IDLE_TIMEOUT_MS': { prop: 'idleTimeoutMillis',       }, // pg default is 10000
   'PG_CNXN_TIMEOUT_MS': { prop: 'connectionTimeoutMillis', }, // pg default is 0
@@ -43,15 +67,15 @@ const MANDATORY_ENV_VARS = {
 
 /**
  * @param {Object}   overrideVars : object with properties being the environment variable name and values being the override value; 
- * @return object with properties being the environment variables that have been overridden and values being the old values.
+ * @return object with properties being the environment variables that have been overridden and values being the old values or null if the variable did not exist.
  */
- function overrideEnvVars( overrideVars = {} ) {
-  const originalVars = {};
+ function overrideEnvVars( overrideVars : TypeEnvVarConfig = {} ) {
+  const originalVars : TypeEnvVarStoredConfig = {};
 
   Object.entries( overrideVars ).forEach( ( [ envVar, value ] ) => {
-    if ( process.env[ envVar ] !== value ) {
-      originalVars[ envVar ] = process.env[ envVar ] ;
-      process.env[ envVar ]  = value ;
+    if ( ( process.env[ envVar ] === undefined ) || ( process.env[ envVar ] !== value ) ) {
+      originalVars[ envVar ] = process.env[ envVar ];
+      process.env[ envVar ]  = value;
     }
   } ) ;
 
@@ -61,13 +85,13 @@ const MANDATORY_ENV_VARS = {
 /**
  * @param {Object} modifiedVars : object with properties being the environment variable name and values being the value to restore. 
  */
-function restoreEnvVars( modifiedVars = {} ) {
+function restoreEnvVars( modifiedVars : TypeEnvVarStoredConfig = {} ) {
 
   Object.entries( modifiedVars ).forEach( ( [ envVar, value ] ) => {
     if ( value !== undefined ) {
-      process.env[ envVar ] = modifiedVars[ envVar ] ;
+      process.env[ envVar ] = value;
     } else {
-      delete process.env[ envVar ] ;
+      delete process.env[ envVar ];
     }
   } ) ;
 }
@@ -78,24 +102,25 @@ function restoreEnvVars( modifiedVars = {} ) {
  *                  - dbConfig:        optional DB environment variables configuration
  * @return object with properties being the environment variables and values being the real or default value for that variable.
  */
-function getConfig( { returnSensitive = false, dbConfig = {} } = {} ) {
+type TypeGetConfigProps = { returnSensitive?: boolean, dbConfig?: TypeEnvVarConfig };
+function getConfig( { returnSensitive = false, dbConfig = {} } : TypeGetConfigProps = {} ) : TypeEnvVarStoredConfig {
 
-  const envConfig = {} ;
+  const envConfig : TypeEnvVarStoredConfig = {};
 
-  const originalEnvVars = overrideEnvVars( dbConfig ) ;
+  const originalEnvVars = overrideEnvVars( dbConfig );
 
-  const processEnvVars = ( envVars ) => {
-    Object.entries( envVars ).forEach( ([ varName, varConfig ]) => {
+  const processDbEnvVars = ( dbEnvVars : TypeDbEnvVarConfig ) => {
+    Object.entries( dbEnvVars ).forEach( ([ varName, varConfig ]) => {
       if ( ( ! varConfig.sensitive ) || returnSensitive ) {
-        envConfig[ varName ] = process.env[ varName ] || varConfig.default || null ;
+        envConfig[ varName ] = process.env[ varName ] || varConfig.default || undefined;
       } else {
-        envConfig[ varName ] = '<********>' ;
+        envConfig[ varName ] = '<********>';
       }
     }) ;
   } ;
 
-  processEnvVars( MANDATORY_ENV_VARS ) ;
-  processEnvVars( OPTIONAL_ENV_VARS  ) ;
+  processDbEnvVars( MANDATORY_ENV_VARS ) ;
+  processDbEnvVars( OPTIONAL_ENV_VARS  ) ;
 
   restoreEnvVars( originalEnvVars ) ;
 
@@ -106,15 +131,15 @@ function getConfig( { returnSensitive = false, dbConfig = {} } = {} ) {
  * @param {Object} dbConfig: optional DB environment variables configuration
  * @return an object used to call the pg.Pool constructor with.
  */
- function getPoolConfig( dbConfig = {} ) {
+ function getPoolConfig( dbConfig : TypeEnvVarConfig = {} ) {
 
   const envConfig  = getConfig( { returnSensitive: true, dbConfig } ) ;
-  const poolConfig = {} ;
+  const poolConfig : TypeEnvVarConfig = {} ;
 
-  const processEnvVars = ( { envVars, errorIfMissing } ) => {
+  const processEnvVars = ( { envVars, errorIfMissing } : { envVars: TypeDbEnvVarConfig, errorIfMissing : boolean } ) => {
     Object.entries( envVars ).forEach( ( [ varName, varConfig ] ) => {
       const varValue = envConfig[ varName ];
-      if ( varValue !== null ) {
+      if ( varValue !== undefined ) {
         poolConfig[ varConfig.prop ] = varValue ;
       } else if ( errorIfMissing ) {
         throw new Error( `Environment variable not defined: ${varName}` ) ;
@@ -133,22 +158,24 @@ function getConfig( { returnSensitive = false, dbConfig = {} } = {} ) {
  * @return closure that returns the DB connection pool object created from the environment and configuration;
  *         closure takes a parameter that if not false terminates the pool.
  */
-function getCreatePoolClosure( dbConfig = {} ) {
-  let pool = null ;
+type TypeGetCreatePoolClosureRet = ( terminate?: boolean ) => Promise<(TypeNullablePool)>;
+function getCreatePoolClosure( dbConfig = {} ) : TypeGetCreatePoolClosureRet {
+  let pool : TypeNullablePool = null ;
 
   return async ( terminate = false ) => {
-    let result = null ;
+    let result : TypeNullablePool = null ;
     if ( terminate === TERMINATE_POOL ) {
       if ( pool ) {
-        result = await pool.end() ;
+        await pool.end();
       }
       pool = null ;
     } else if ( pool ) {
       result = pool ;
     } else {
       const poolConfig = getPoolConfig( dbConfig ) ;
-      pool   = new pg.Pool( poolConfig ) ;
-      result = pool ;
+      const tmpPool    = new pg.Pool( poolConfig ) as unknown;
+      pool             = tmpPool as TypeNullablePool;
+      result           = pool;
     }
     return result ;
   };
@@ -157,18 +184,22 @@ function getCreatePoolClosure( dbConfig = {} ) {
 /**
  * @return function that returns a configured pg.Pool object
  */
-const getPool = getCreatePoolClosure() ;
+const getPool = getCreatePoolClosure();
 
 /**
  * @param pool - DB pool object, if not specified the current pool is used or if no current pool exists a new pool is created.
  * @return connected client database object with additional methods: begin, commit, rollback.
  * @exception if an error occurs.
  */
-async function connect( pool = null ) {
-  pool = pool || await getPool() ;
-  const client        = await pool.connect() ;
+async function connect( pool : TypeNullablePool = null ) : Promise<TypePoolClient> {
+  pool = pool || await getPool();
+  // pool is guaranteed to be set here, getPool shall throw an exception if it fails
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client        = await pool!.connect();
   const arrMethodName = [ 'begin', 'commit', 'rollback' ] ;
-  arrMethodName.forEach( query => client[ query ] = () => client.query( query ) ) ;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Adding new methods to the client
+  arrMethodName.forEach( methodName => client[ methodName ] = () => client.query( methodName ) ) ;
   return client ;
 }
 
@@ -183,14 +214,15 @@ async function end() {
 /**
  * @returns a new connection pool object that the caller must manage.
  */
-async function createCustomPool( dbConfig ) {
+async function createCustomPool( dbConfig : TypeEnvVarConfig ) : Promise<TypeCustomPool> {
   const getCustomPool = getCreatePoolClosure( dbConfig ) ;
-  const customPool    = await getCustomPool() ;
-  customPool.close    = async () => await getCustomPool( TERMINATE_POOL ) ;
-  return customPool ;
+  const rawCustomPool = await getCustomPool() as unknown;
+  const customPool    = rawCustomPool as TypeCustomPool;
+  customPool.close    = async () => await getCustomPool( TERMINATE_POOL ) as null;
+  return customPool;
 }
 
-module.exports = {
+export default {
   connect,
   end,
   createCustomPool,

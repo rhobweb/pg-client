@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": true,
+    "target": "es2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "test"
+  ]
+}

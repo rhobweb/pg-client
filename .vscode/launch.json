@@ -2,18 +2,20 @@
   // Use IntelliSense to learn about possible attributes.
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
+  "version": "0.2.1",
   "configurations": [
     {
       "type": "node",
       "request": "launch",
       "runtimeVersion": "18.13.0",
       "name": "ESLint",
-      "program": "${env:NVM_SYMLINK}/npx",
+      //"program": "C:/Users/rhob/AppData/Roaming/nvm/v18.13.0/npx",
+      "program": "${env:NVM_SYMLINK}/npx.cmd",
+      ///
       "args": [
         "eslint",
-        "${workspaceFolder}/pg-client.js",
-        "${workspaceFolder}/test/**/*.js",
+        "${workspaceFolder}/pg-client.ts",
+        //"${workspaceFolder}/test/**/*.js",
       ],
       "env": {
       },
@@ -23,7 +25,7 @@
       "type": "node",
       "request": "launch",
       "name": "Unit Tests",
-      "program": "${workspaceFolder}/node_modules/mocha",
+      "program": "${workspaceFolder}/node_modules/ts-mocha/bin/ts-mocha",
       "runtimeVersion": "18.13.0",
       "env": {
         "NODE_ENV": "test-unit"
@@ -34,7 +36,7 @@
         "--timeout",
         "999999",
         "--colors",
-        "${workspaceFolder}/test/unit/**/*.spec.js",
+        "${workspaceFolder}/test/unit/**/*.spec.ts",
       ],
       "outputCapture": "std",
     },
@@ -50,11 +52,11 @@
       },
       "args": [
         //"--reporter=html",
-        "mocha",
+        "ts-mocha",
         "--timeout",
         "999999",
         "--colors",
-        "${workspaceFolder}/test/unit/**/*.spec.js",
+        "${workspaceFolder}/test/unit/**/*.spec.ts",
       ],
       "outputCapture": "std",
     },
