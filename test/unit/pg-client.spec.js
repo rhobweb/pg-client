@@ -3,48 +3,15 @@
  * Unit Tests for pg-client package.
  */
 
-import sinon, { SinonSandbox, SinonStub } from 'sinon';
-import { expect }                         from 'chai';
-import rewiremock                         from 'rewiremock/node';
-import rewire                             from 'rewire';
+const sinon      = require( 'sinon' );
+const { expect } = require( 'chai' );
+const rewire     = require( 'rewire' );
+//const rewiremock                         from 'rewiremock/node';
 
 const REL_SRC_PATH = '../../';
 const MODULE_NAME  = 'pg-client';
 const TEST_MODULE  = REL_SRC_PATH + MODULE_NAME;
 
-// BEGIN: Mock the Pool object in the 'pg' module
-const PG_MODULE    = 'pg';
-
-class Pool {
-  constructor() {
-    return testPool;
-  }
-  async connect() {};
-  async end()     {};
-}
-
-const testPoolDefault : Pool = {
-  connect: async () => {},
-  end:     async () => {},
-};
-
-let testPool : Pool = testPoolDefault;
-
-const testPg = {
-  Pool,
-};
-
-function setTestPool( newPool? : Pool ) {
-  if ( newPool ) {
-    testPool = newPool;
-  } else {
-    testPool = testPoolDefault;
-  }
-  return testPool;
-}
-
-rewiremock( PG_MODULE ).with( testPg );
-// END: Mock the Pool object in the 'pg' module
 
 // Default DB connection values used if the environment variables are not defined
 const DEFAULT_PGHOST             = 'test-PGHOST';
@@ -57,12 +24,12 @@ const DEFAULT_PG_IDLE_TIMEOUT_MS = 'test-PG_IDLE_TIMEOUT_MS';
 const DEFAULT_PG_CNXN_TIMEOUT_MS = 'test-PG_CNXN_TIMEOUT_MS';
 const OBSCURED_PASSWORD          = '<********>';
 
-let sandbox : SinonSandbox;
+let sandbox;
 
-type TypeObject        = { [key:string] : any };
-type TypeRewiredModule = { [key:string] : any };
-
-type TypeEnvVarStoredConfig = { [key:string] : string | undefined };
+//: SinonSandbox
+//type TypeObject        = { [key:string] : any };
+//type TypeRewiredModule = { [key:string] : any };
+//type TypeEnvVarStoredConfig = { [key:string] : string | undefined };
 
 /**
  * Modules load other modules, so to force a module reload need to delete
@@ -81,23 +48,21 @@ type TypeEnvVarStoredConfig = { [key:string] : string | undefined };
 function commonBeforeEach() {
   //unrequireModules();
   sandbox = sinon.createSandbox();
-  rewiremock.enable();
 }
 
 function commonAfterEach() {
   sandbox.restore();
   //unrequireModules();
-  rewiremock.disable();
 }
 
-function createTestModule() : TypeRewiredModule {
+function createTestModule() {
   const testModule = rewire( TEST_MODULE );
   return testModule;
 }
 
-function createTestModuleAndGetProps( arrProp : string[] = [] ) : { testModule: TypeRewiredModule, testProps: TypeObject } {
+function createTestModuleAndGetProps( arrProp = [] ) {
   const testModule = createTestModule();
-  const testProps : { [key:string]: any }= {};
+  const testProps  = {};
   arrProp.forEach( m => { 
     testProps[ m ] = testModule.__get__( m );
   } );
@@ -105,28 +70,13 @@ function createTestModuleAndGetProps( arrProp : string[] = [] ) : { testModule: 
   return result;
 }
 
-//function createProxyTestModule2( moduleName, proxiedItems ) {
-//  const testModule = rewiremock( moduleName ).with( proxiedItems );
-//  //rewiremock.enable();
-//  return testModule;
-//}
-//
-//async function createProxyTestModule( moduleName, proxiedItems ) {
-//  rewiremock( moduleName ).callThrough().with( proxiedItems );
-//  rewiremock.enable();
-//  const testModule = await import( moduleName );
-//  //const testModule = rewiremock( moduleName ).callThrough().with( proxiedItems ).enable();
-//  return testModule;
-//}
-
-function getPrivateStubs( testModule : TypeRewiredModule, arrFnName : string[] = [] ) {
-  const testStubs   : { [key:string]: any }= {};
-  const testDummies : { [key:string]: any }= {};
+function getPrivateStubs( testModule, arrFnName = [] ) {
+  const testStubs   = {};
+  const testDummies = {};
 
   arrFnName.forEach( fnName => {
     testStubs[ fnName ]   = () => {};
-    testDummies[ fnName ] = ( ...args : any[] ) => testStubs[ fnName ]( ...args );
-    // @ts-ignore RewiredModule is not an exported type
+    testDummies[ fnName ] = ( ...args ) => testStubs[ fnName ]( ...args );
     testModule.__set__( fnName, testDummies[ fnName ] );
   } );
 
@@ -149,14 +99,14 @@ describe(MODULE_NAME + ':module can be loaded', () => {
 });
 
 describe(MODULE_NAME + ':overrideEnvVars', () => {
-  let testProps : TypeObject;
-  let testFn : Function;
+  let testProps;
+  let testFn;
   let testFnName = 'overrideEnvVars';
   let actualResult;
-  let expectedResult : TypeObject;
-  let testArgs       : TypeObject;
+  let expectedResult;
+  let testArgs;
 
-  function checkResult( objEnv : TypeObject ) {
+  function checkResult( objEnv ) {
     Object.entries( objEnv ).forEach( ( [ envName, envVal ] ) => {
       expect( process.env[ envName ] ).to.equal( envVal );
       delete process.env[ envName ]; // Delete it now it has been checked
@@ -223,12 +173,12 @@ describe(MODULE_NAME + ':overrideEnvVars', () => {
 });
 
 describe(MODULE_NAME + ':restoreEnvVars', () => {
-  let testProps : TypeObject;
-  let testFn    : Function;
+  let testProps;
+  let testFn;
   let testFnName = 'restoreEnvVars';
-  let testArgs : TypeEnvVarStoredConfig;
+  let testArgs;
 
-  function checkResult( objEnv : TypeEnvVarStoredConfig ) {
+  function checkResult( objEnv ) {
     Object.entries( objEnv ).forEach( ( [ envName, envVal ] ) => {
       expect( process.env[ envName ] ).to.equal( envVal );
       delete process.env[ envName ]; // Delete it now it has been checked
@@ -265,22 +215,22 @@ describe(MODULE_NAME + ':restoreEnvVars', () => {
 
 describe(MODULE_NAME + ':getConfig', () => {
   let testModule;
-  let testFn : Function;
+  let testFn;
   let testStubs;
-  let testProps : TypeObject;
-  let testArgs  : TypeObject;
-  let testDbConfig : string;
+  let testProps;
+  let testArgs;
+  let testDbConfig;
   let overrideEnvVarsStub;
-  let overrideEnvVarsRet : string;
-  let overrideEnvVarsExpectedArgs : any;
+  let overrideEnvVarsRet;
+  let overrideEnvVarsExpectedArgs;
   let restoreEnvVarsStub;
-  let restoreEnvVarsRet         : string;
-  let restoreEnvVarsExpectedArgs : [ SinonStub<any[], any>, ...any ];
+  let restoreEnvVarsRet;
+  let restoreEnvVarsExpectedArgs;
   let actualResult;
-  let expectedResult : TypeObject;
-  let arrEnvVarCreated : string[];
+  let expectedResult;
+  let arrEnvVarCreated;
 
-  function stubEnvVar( varName : string, varValue : string ) { // Stub the environment variables if they don't exist
+  function stubEnvVar( varName, varValue ) { // Stub the environment variables if they don't exist
     if ( process.env[ varName ] === undefined ) {
       process.env[ varName ] = 'DUMMY';
       arrEnvVarCreated.push( varName );
@@ -309,7 +259,7 @@ describe(MODULE_NAME + ':getConfig', () => {
     commonBeforeEach();
     ( { testModule, testProps } = createTestModuleAndGetProps( [ 'DEFAULT_HOST', 'DEFAULT_PORT' ] ) );
     testStubs                   = getPrivateStubs( testModule, [ 'overrideEnvVars', 'restoreEnvVars' ] );
-    testFn                      = testModule.default.getConfig;
+    testFn                      = testModule.getConfig;
     testDbConfig = 'test dbConfig';
     testArgs     = {
       dbConfig: testDbConfig,
@@ -391,16 +341,16 @@ describe(MODULE_NAME + ':getPoolConfig', () => {
   let testModule;
   let testProps;
   let testStubs;
-  let testFn     = Function;
+  let testFn;
   let testFnName = 'getPoolConfig';
   let getConfigStub;
-  let getConfigRet: TypeObject;
+  let getConfigRet;
   let getConfigExpectedArgs;
-  let actualErr    : Error;
-  let actualResult : TypeObject;
+  let actualErr;
+  let actualResult;
   let expectedErrMessage;
-  let expectedResult : TypeObject;
-  let testArgs : any;
+  let expectedResult;
+  let testArgs;
   let testDbConfig;
 
   beforeEach( () => {
@@ -534,6 +484,33 @@ describe(MODULE_NAME + ':getPoolConfig', () => {
     expect( actualErr.message ).to.equal( expectedErrMessage );
   });
 });
+// BEGIN: Mock the Pool object in the 'pg' module
+/*
+const PG_MODULE    = 'pg';
+
+
+const testPoolDefault = {
+  connect: async () => {},
+  end:     async () => {},
+};
+
+let testPool : Pool = testPoolDefault;
+
+const testPg = {
+  Pool,
+};
+
+function setTestPool( newPool? : Pool ) {
+  if ( newPool ) {
+    testPool = newPool;
+  } else {
+    testPool = testPoolDefault;
+  }
+  return testPool;
+}
+
+// END: Mock the Pool object in the 'pg' module
+*/
 
 describe(MODULE_NAME + ':getCreatePoolClosure', () => {
   let testModule;
@@ -550,22 +527,36 @@ describe(MODULE_NAME + ':getCreatePoolClosure', () => {
   let testArgs;
   let endStub;
   let endExpectedArgs;
-  let thisTestPool;
+  let testPool;
 
   beforeEach( () => {
-    thisTestPool = setTestPool();
+    testPool = {
+      end: () => {},
+     };
+    class Pool {
+      constructor( params ) {
+        testPool.params = params;
+        return testPool;
+      }
+    }
+    testPg = {
+      Pool
+    };
     commonBeforeEach();
     ( { testModule, testProps } = createTestModuleAndGetProps( [ testFnName ] ) );
     testFn    = testProps[ testFnName ];
     testStubs = getPrivateStubs( testModule, [ 'getPoolConfig' ] );
+    testModule.__set__( 'pg', testPg );
     testArgs  = 'test dbConfig';
     getPoolConfigStub = sandbox.stub( testStubs, 'getPoolConfig' ).callsFake( () => {
       return getPoolConfigRet;
     } );
     getPoolConfigRet          = 'getPoolConfig ret';
     getPoolConfigExpectedArgs = [ getPoolConfigStub, testArgs ];
-    endStub         = sandbox.stub( thisTestPool, 'end' ).callsFake( () => {} ) ;
+    endStub         = sandbox.stub( testPool, 'end' ).callsFake( () => {} ) ;
     endExpectedArgs = [ endStub ];
+    expectedResult = testPool;
+    Object.assign( expectedResult, testPool, { params: getPoolConfigRet } );
   });
 
   afterEach( () => {
@@ -580,7 +571,6 @@ describe(MODULE_NAME + ':getCreatePoolClosure', () => {
   });
 
   it ('Call closure', async () => {
-    expectedResult = thisTestPool;
     testClosure    = testFn( testArgs );
     actualResult   = await testClosure();
     sinon.assert.calledWithExactly.apply( null, getPoolConfigExpectedArgs );
@@ -589,7 +579,6 @@ describe(MODULE_NAME + ':getCreatePoolClosure', () => {
   });
 
   it ('Call closure twice', async () => {
-    expectedResult = thisTestPool;
     testClosure    = testFn( testArgs );
     actualResult   = await testClosure();
     sinon.assert.calledWithExactly.apply( null, getPoolConfigExpectedArgs );
@@ -602,7 +591,6 @@ describe(MODULE_NAME + ':getCreatePoolClosure', () => {
   });
 
   it ('Terminate closure', async () => {
-    expectedResult = thisTestPool;
     testClosure    = testFn( testArgs );
     actualResult   = await testClosure();
     sinon.assert.calledWithExactly.apply( null, getPoolConfigExpectedArgs );
@@ -611,6 +599,25 @@ describe(MODULE_NAME + ':getCreatePoolClosure', () => {
     expectedResult = null;
     actualResult   = await testClosure( true );
     sinon.assert.calledWithExactly.apply( null, endExpectedArgs );
+    expect( actualResult ).to.equal( expectedResult );
+  });
+
+  it ('Terminate closure twice', async () => {
+    testClosure    = testFn( testArgs );
+    actualResult   = await testClosure();
+    sinon.assert.calledWithExactly.apply( null, getPoolConfigExpectedArgs );
+    sinon.assert.notCalled( endStub );
+    expect( actualResult ).to.equal( expectedResult );
+    expectedResult = null;
+    actualResult   = await testClosure( true );
+    sinon.assert.calledWithExactly.apply( null, endExpectedArgs );
+    expect( actualResult ).to.equal( expectedResult );
+    endStub.restore();
+    endStub         = sandbox.stub( testPool, 'end' ).callsFake( () => {} ) ;
+    endExpectedArgs = [ endStub ];
+    expectedResult = null;
+    actualResult   = await testClosure( true );
+    sinon.assert.notCalled( endStub );
     expect( actualResult ).to.equal( expectedResult );
   });
 });
@@ -629,6 +636,8 @@ describe(MODULE_NAME + ':connect', () => {
   let connectDefaultExpectedArgs;
   let queryStub;
   let queryExpectedArgsArr;
+  let getPoolStub;
+  let getPoolRet;
 
   beforeEach( () => {
     commonBeforeEach();
@@ -636,13 +645,17 @@ describe(MODULE_NAME + ':connect', () => {
     process.env.PGUSER     = 'pguser';
     process.env.PGPASSWORD = 'pgpassword';
     ( { testModule } = createTestModuleAndGetProps() );
+    testStubs = getPrivateStubs( testModule, [ 'getPool' ] );
+    getPoolStub = sandbox.stub( testStubs, 'getPool' ).callsFake( () => {
+      return getPoolRet;
+    } );
     testCustomPool = {
       connect: () => {},
     };
     testDefaultPool = {
       connect: () => {},
     };
-    connectCustomStub   = sandbox.stub( testCustomPool, 'connect' ).callsFake( () => {
+    connectCustomStub = sandbox.stub( testCustomPool, 'connect' ).callsFake( () => {
       return connectCustomRet;
     } );
     connectCustomRet = {
@@ -672,9 +685,9 @@ describe(MODULE_NAME + ':connect', () => {
   });
 
   it ('Connect with default pool', async () => {
-    setTestPool( testDefaultPool );
+    getPoolRet     = testDefaultPool;
     expectedResult = connectDefaultRet;
-    actualResult   = await testModule.default.connect();
+    actualResult   = await testModule.connect();
     sinon.assert.calledWithExactly.apply( null, connectDefaultExpectedArgs );
     sinon.assert.notCalled( connectCustomStub );
     expect( actualResult ).to.equal( expectedResult );
@@ -684,9 +697,9 @@ describe(MODULE_NAME + ':connect', () => {
   });
 
   it ('Connect with custom pool', async () => {
-    setTestPool( testCustomPool );
+    getPoolRet     = testCustomPool;
     expectedResult = connectCustomRet;
-    actualResult   = await testModule.default.connect( testCustomPool );
+    actualResult   = await testModule.connect( testCustomPool );
     sinon.assert.calledWithExactly.apply( null, connectCustomExpectedArgs );
     sinon.assert.notCalled( connectDefaultStub );
     expect( actualResult ).to.equal( expectedResult );
@@ -696,42 +709,38 @@ describe(MODULE_NAME + ':connect', () => {
   });
 
   it ('Client methods OK', async () => {
-    setTestPool( testDefaultPool );
-    actualResult = await testModule.default.connect();
+    getPoolRet   = testDefaultPool;
+    actualResult = await testModule.connect();
     actualResult.begin();
     actualResult.commit();
     actualResult.rollback();
     sinon.assert.callCount( queryStub, 3 );
     sinon.assert.calledWithExactly.apply( null, queryExpectedArgsArr.shift() );
-  });
-});
+  } );
+} );
 
 describe(MODULE_NAME + ':end', () => {
   let testModule;
   let actualResult;
   let expectedResult;
-  let connectStub;
-  let connectRet;
-  let connectExpectedArgs;
-  let endStub;
-  let endExpectedArgs;
-  let thisTestPool;
+  let testStubs;
+  let getPoolStub;
+  let getPoolRet;
+  let getPoolExpectedArgs;
 
   beforeEach( () => {
     commonBeforeEach();
-    thisTestPool = {
-      connect: async () => {}, 
-      end:     async () => {},
+    testPool = {
+      connect: () => {}, 
+      end:     () => {},
     };
-    setTestPool( thisTestPool );
     ( { testModule } = createTestModuleAndGetProps() );
-    connectStub = sandbox.stub( thisTestPool, 'connect' ).callsFake( async () => {
-      return thisTestPool;
+    testStubs        = getPrivateStubs( testModule, [ 'getPool' ] );
+    getPoolStub = sandbox.stub( testStubs, 'getPool' ).callsFake( () => {
+      return getPoolRet;
     } );
-    connectExpectedArgs = [ connectStub ];
-    connectRet          = thisTestPool;
-    endStub             = sandbox.stub( thisTestPool, 'end' ).callsFake( async () => {} );
-    endExpectedArgs     = [ endStub ];
+    getPoolRet = 'getPool ret';
+    getPoolExpectedArgs = [ getPoolStub, true ];
   });
 
   afterEach( () => {
@@ -739,19 +748,11 @@ describe(MODULE_NAME + ':end', () => {
     testModule = null;
   });
 
-  it ('end unconnected pool', async () => {
-    expectedResult = null;
-    actualResult   = await testModule.default.end();
-    sinon.assert.notCalled( endStub );
-    expect( actualResult ).to.equal( expectedResult );
-  });
 
-  it ('end connected pool', async () => {
-    await testModule.default.connect();
-    expectedResult = null;
-    actualResult   = await testModule.default.end();
-    sinon.assert.calledWithExactly.apply( null, connectExpectedArgs );
-    sinon.assert.calledWithExactly.apply( null, endExpectedArgs );
+  it ('OK', () => {
+    expectedResult = getPoolRet;
+    actualResult   = testModule.end();
+    sinon.assert.calledWithExactly.apply( null, getPoolExpectedArgs );
     expect( actualResult ).to.equal( expectedResult );
   });
 });
@@ -798,7 +799,7 @@ describe(MODULE_NAME + ':createCustomPool', () => {
 
   it ('OK', async () => {
     expectedResult = getCustomPoolRetArr[ 0 ];
-    actualResult   = await testModule.default.createCustomPool( testArgs );
+    actualResult   = await testModule.createCustomPool( testArgs );
     sinon.assert.callCount( getCustomPoolStub, 1 );
     sinon.assert.calledWithExactly.apply( null, getCreatePoolClosureExpectedArgs );
     sinon.assert.calledWithExactly.apply( null, getCustomPoolExpectedArgsArr.shift() );
@@ -806,7 +807,7 @@ describe(MODULE_NAME + ':createCustomPool', () => {
   });
 
   it ('Close the pool', async () => {
-    actualResult = await testModule.default.createCustomPool( testArgs );
+    actualResult = await testModule.createCustomPool( testArgs );
     actualResult.close();
     sinon.assert.callCount( getCustomPoolStub, 2 );
     sinon.assert.calledWithExactly.apply( null, getCustomPoolExpectedArgsArr.shift() );

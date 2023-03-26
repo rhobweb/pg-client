@@ -1,6 +1,6 @@
 {
   "name": "@rhobweb.js/pg-client",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": {
     "name": "Rhob Weber"
   },
@@ -11,7 +11,7 @@
     "@rhobweb.js/verdaccio-readme-fixer": "1.0.0",
     "@types/chai": "4.3.4",
     "@types/mocha": "10.0.1",
-    "@types/pg": "8.6.6",
+    "@types/pg": "^8.6.6",
     "@types/rewire": "2.5.28",
     "@types/sinon": "10.0.13",
     "@typescript-eslint/eslint-plugin": "5.56.0",
@@ -24,6 +24,7 @@
     "rewiremock": "3.14.5",
     "sinon": "15.0.2",
     "ts-mocha": "10.0.0",
+    "tsd": "^0.28.0",
     "typescript": "5.0.2"
   },
   "license": "ISC",
@@ -38,6 +39,10 @@
   },
   "dependencies": {
     "pg": "8.10.0"
+  },
+  "exports": {
+    "require": "./pg-client.js",
+    "import": "./esm/wrapper.js"
   },
   "readme": "# Overview\nModule that provide a client connection to a PostgresSQL database.\n\n# Usage\n\n## Environment Variables\n\n| Variable            | Description                        | Default   |\n|---------------------|------------------------------------|-----------|\n| PGHOST              | DB hostname                        | ::1       |\n| PGPORT              | DB port                            | 5432      |\n| PGDATABASE          | DB name                            |           |\n| PGUSER              | DB username                        |           |\n| PGPASSWORD          | DB password                        |           |\n| PG_MAX_CLIENT       | Maximum number of open connections | 10        |\n| PG_IDLE_TIMEOUT_MS  | Idle timeout in milliseconds       | 10000     |\n| PG_CNXN_TIMEOUT_MS  | Connection timeout in milliseconds | 0         |\n\n<br>The idle timeout closes an open connection after the specified period of inactivity.\n<br>A connect request shall fail if the maximum number of connections are still in use after the specified connection timeout.\n\n## Example Usage\n\n    const { connect, end } = require( '@rokit.js/pg-client');\n\n    const dbClient = await connect();\n    . . .\n    do stuff with the DB client\n    . . .\n    await dbClient.release();\n\n    // When closing down\n    await end(); // Terminate the connection pool\n\n# Methods\n\n## connect\n\nCreate a client connection object.\n\n    const dbClient = await pgClient.connect( customPool = null );\n\nDefaults to the regular pool if no argument is specified.\n\nExceptions shall be thrown if:\n  - any of the required environment variables are not defined (i.e., the ones without default values);\n  - the specified environment variables are invalid or do not define a valid connection;\n  - if it is not possible to connect the database for any reason;\n  - if the maximumum number of active client connections are currently in use.\n\n## end\n\nTerminate the DB connection pool.\n\n    async pgClient.end();\n\n<br>Call this to terminate the connection pool when shutting down the application.\n<br>If this is not called, the connection pool shall terminate automatically after about 5 seconds.\n\n## createCustomPool\n\n    const customPool = await pgClient.createCustomPool();\n\nCreate a new connection pool configured from different environment variables.\n<br>The custom pool must be explicitly closed by the caller.\n\n    ... updated environment variables ...\n    const customPool = await pgClient.createCustomPool();\n    const dbClient   = await pgClient.connect( customPool );\n    ... do stuff ...\n    await dbClient.release();\n    await customPool.close();\n\n### Regular Pool and Custom Pool\n\nCustom pools are used for non-standard use cases, typically administrative.\n<br>The regular connection pool is created when \"connect()\" is first called.\n<br>If \"connect()\" has not yet been called, changing the environment variables dynamically shall result in the regular connection pool being configured incorrectly, e.g.,\n\n    process.env.PG_IDLE_TIMEOUT_MS = 0;\n    const customPool = await pgClient.createCustomPool();\n    . . .\n    await pgClient.connect();\n    . . .\n\nEither restore the modified environment variables, e.g.,\n\n    const oldTimeout = process.env.PG_IDLE_TIMEOUT_MS;\n    process.env.PG_IDLE_TIMEOUT_MS = 0;\n    const customPool = await pgClient.createCustomPool();\n    process.env.PG_IDLE_TIMEOUT_MS = oldTimeout;\n    . . .\n\nor connect and disconnect a regular client first, e.g.,\n\n    await pgClient.connect();\n    await pgClient.release();\n    process.env.PG_IDLE_TIMEOUT_MS = 0;\n    const customPool = await pgClient.createCustomPool();\n    . . .\n\n## getConfig\nReturns the configuration as loaded from the environment, e.g.,\n\n    const pgConfig = pgClient.getConfig();\n\nwould return something like:\n\n    {\n      PGHOST:              'pghost.com',\n      PGPORT:              '5432',\n      PGDATABASE:          'pgdb',\n      PGUSER:              'pguser',\n      PGPASSWORD:          'pgpass'\n      PG_MAX_CLIENT:       null,\n      PG_IDLE_TIMEOUT_MS': null,\n      PG_CNXN_TIMEOUT_MS': null,\n    }\n\n\n# Run Tests\n\nEither define the DB environment variables or modify the defaults defined in test/unit/pg-client.js.\n\n    export PGHOST=myhost\n    export PGPORT=5432\n    export PGDATABASE=mydb\n    export PGUSER=myuser\n    export PGPASSWORD=mypassword\n    npm install\n    npm install mocha --global\n    npm run test\n    npm run test-coverage"
 }

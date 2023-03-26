@@ -14,7 +14,7 @@
       ///
       "args": [
         "eslint",
-        "${workspaceFolder}/pg-client.ts",
+        "${workspaceFolder}/pg-client.js",
         //"${workspaceFolder}/test/**/*.js",
       ],
       "env": {
@@ -25,7 +25,7 @@
       "type": "node",
       "request": "launch",
       "name": "Unit Tests",
-      "program": "${workspaceFolder}/node_modules/ts-mocha/bin/ts-mocha",
+      "runtimeExecutable": "mocha",
       "runtimeVersion": "18.13.0",
       "env": {
         "NODE_ENV": "test-unit"
@@ -36,7 +36,7 @@
         "--timeout",
         "999999",
         "--colors",
-        "${workspaceFolder}/test/unit/**/*.spec.ts",
+        "${workspaceFolder}/test/unit/**/*.spec.js",
       ],
       "outputCapture": "std",
     },
@@ -44,7 +44,8 @@
       "type": "node",
       "request": "launch",
       "name": "Unit Test Coverage",
-      "program": "${workspaceFolder}/node_modules/nyc/bin/nyc",
+      "runtimeExecutable": "nyc",
+      //"program": "${workspaceFolder}/node_modules/nyc/bin/nyc",
       "runtimeVersion": "18.13.0",
       // Run with "Start Without Debugging"
       "env": {
@@ -52,11 +53,28 @@
       },
       "args": [
         //"--reporter=html",
-        "ts-mocha",
+        "mocha",
         "--timeout",
         "999999",
         "--colors",
-        "${workspaceFolder}/test/unit/**/*.spec.ts",
+        "${workspaceFolder}/test/unit/**/*.spec.js",
+      ],
+      "outputCapture": "std",
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Unit Tests - Types",
+      "runtimeExecutable": "npx",
+      "cwd": "${workspaceFolder}",
+      "runtimeVersion": "18.13.0",
+      "env": {
+        "NODE_ENV": "test-unit"
+      },
+      "args": [
+        "tsd",
+        "--files",
+        "./test/test-d/*.test-d.ts",
       ],
       "outputCapture": "std",
     },
@@ -64,7 +82,7 @@
       "type": "node",
       "request": "launch",
       "name": "System Tests",
-      "program": "${env:NVM_SYMLINK}/_mocha",
+      "runtimeExecutable": "mocha",
       "runtimeVersion": "18.13.0",
       "env": {
         "NODE_ENV": "test-unit"

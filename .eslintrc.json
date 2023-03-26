@@ -6,11 +6,9 @@
     "jquery": true,
     "mocha": true
   },
-  "parser": "@typescript-eslint/parser",
+  "parser": "eslint/parser",
   "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    "eslint:recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 13,
@@ -21,7 +19,6 @@
     "semi": [2, "always"] 
   },
   "plugins": [
-    "@typescript-eslint"
   ],
   "ignorePatterns": [
     "node_modules/",
