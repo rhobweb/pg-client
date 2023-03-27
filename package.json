@@ -22,17 +22,17 @@
     "nyc": "15.1.0",
     "rewire": "6.0.0",
     "rewiremock": "3.14.5",
-    "sinon": "15.0.2",
+    "sinon": "^15.0.3",
     "ts-mocha": "10.0.0",
     "tsd": "^0.28.0",
     "typescript": "5.0.2"
   },
   "license": "ISC",
-  "main": "pg-client.ts",
+  "main": "pg-client.js",
   "maintainer": "Rhob Weber",
   "scripts": {
-    "test": "mocha --timeout 999999 ./test/unit/**/*.spec.ts",
-    "test-coverage": "nyc mocha --timeout 999999 ./test/unit/**/*.spec.ts"
+    "test": "mocha --timeout 999999 ./test/unit/**/*.spec.js",
+    "test-coverage": "nyc mocha --timeout 999999 ./test/unit/**/*.spec.js"
   },
   "publishConfig": {
     "registry": "http://localhost:4873"
