@@ -1,5 +1,5 @@
 # Overview
-Module that provide a client connection to a PostgresSQL database.
+Module that provides a client connection with transaction support to a PostgresSQL database.
 
 # Usage
 
@@ -21,7 +21,7 @@ Module that provide a client connection to a PostgresSQL database.
 
 ## Example Usage
 
-    const { connect, end } = require( '@rokit.js/pg-client');
+    const { connect, end } = require( '@rhoweb.js/pg-client');
 
     const dbClient = await connect();
     . . .
@@ -131,3 +131,4 @@ Either define the DB environment variables or modify the defaults defined in tes
     npm install mocha --global
     npm run test
     npm run test-coverage
+    

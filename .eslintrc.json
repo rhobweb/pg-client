@@ -6,14 +6,12 @@
     "jquery": true,
     "mocha": true
   },
-  "parser": "eslint/parser",
-  "extends": [
-    "eslint:recommended"
-  ],
+  "parser": "@babel/eslint-parser",
+  "extends": "eslint:recommended",
   "parserOptions": {
-    "ecmaVersion": 13,
+    "ecmaVersion": 12,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "requireConfigFile": false
   },
   "rules": {
     "semi": [2, "always"] 

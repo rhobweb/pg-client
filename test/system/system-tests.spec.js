@@ -14,7 +14,7 @@ const TEST_MODULE  = REL_SRC_PATH + MODULE_NAME;
 // Default DB connection values used if the environment variables are not defined
 const DEFAULT_PGDATABASE         = 'gip';
 const DEFAULT_PGUSER             = 'rhob';
-const DEFAULT_PGPASSWORD         = 'Mischief2';
+const DEFAULT_PGPASSWORD         = 'Mypassword';
 const DEFAULT_PG_MAX_CLIENT      = '1';
 const DEFAULT_PG_IDLE_TIMEOUT_MS = '1000';
 const DEFAULT_PG_CNXN_TIMEOUT_MS = '1000';

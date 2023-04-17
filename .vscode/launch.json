@@ -7,11 +7,9 @@
     {
       "type": "node",
       "request": "launch",
+      "runtimeExecutable": "npx",
       "runtimeVersion": "18.13.0",
       "name": "ESLint",
-      //"program": "C:/Users/rhob/AppData/Roaming/nvm/v18.13.0/npx",
-      "program": "${env:NVM_SYMLINK}/npx.cmd",
-      ///
       "args": [
         "eslint",
         "${workspaceFolder}/pg-client.js",
@@ -45,7 +43,6 @@
       "request": "launch",
       "name": "Unit Test Coverage",
       "runtimeExecutable": "nyc",
-      //"program": "${workspaceFolder}/node_modules/nyc/bin/nyc",
       "runtimeVersion": "18.13.0",
       // Run with "Start Without Debugging"
       "env": {
@@ -102,7 +99,7 @@
       "request": "launch",
       "runtimeVersion": "18.13.0",
       "name": "Update README",
-      "program": "./node_modules/@rokit.js/verdaccio-readme-fixer/readme-fixer.js",
+      "program": "./node_modules/@rhoweb.js/verdaccio-readme-fixer/readme-fixer.js",
       "args": [
       ],
       "env": {

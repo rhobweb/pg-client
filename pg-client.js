@@ -167,11 +167,8 @@ const getPool = getCreatePoolClosure();
 async function connect( pool ) {
   pool = pool || await getPool();
   // pool is guaranteed to be set here, getPool shall throw an exception if it fails
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const client        = await pool.connect();
   const arrMethodName = [ 'begin', 'commit', 'rollback' ] ;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore Adding new methods to the client
   arrMethodName.forEach( methodName => client[ methodName ] = () => client.query( methodName ) ) ;
   return client ;
 }
