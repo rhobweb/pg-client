@@ -1,5 +1,5 @@
 # Overview
-Module that provides a client connection with transaction support to a PostgresSQL database.
+Module that provides a client connection with transaction support to a PostgreSQL database.
 
 # Usage
 
