@@ -1,6 +1,6 @@
 {
   "name": "@rhobweb/pg-client",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "author": {
     "name": "Rhob Weber"
   },
@@ -28,6 +28,7 @@
   },
   "license": "ISC",
   "main": "pg-client.js",
+  "typings": "pg-client.d.ts",
   "maintainer": "Rhob Weber",
   "scripts": {
     "test": "mocha --timeout 999999 ./test/unit/**/*.spec.js",
